@@ -41,8 +41,8 @@ std::ostream& Ieee802154NarrowbandScalarTransmitter::printToStream(std::ostream&
 const ITransmission *Ieee802154NarrowbandScalarTransmitter::createTransmission(const IRadio *transmitter, const cPacket *macFrame, const simtime_t startTime) const
 {
     TransmissionRequest *controlInfo = dynamic_cast<TransmissionRequest *>(macFrame->getControlInfo());
-    W transmissionPower = controlInfo && !isNaN(controlInfo->getPower().get()) ? controlInfo->getPower() : power;
-    bps transmissionBitrate = controlInfo && !isNaN(controlInfo->getBitrate().get()) ? controlInfo->getBitrate() : bitrate;
+    W transmissionPower = controlInfo && !_isNaN(controlInfo->getPower().get()) ? controlInfo->getPower() : power;
+    bps transmissionBitrate = controlInfo && !_isNaN(controlInfo->getBitrate().get()) ? controlInfo->getBitrate() : bitrate;
     const simtime_t duration = (macFrame->getBitLength() + headerBitLength) / transmissionBitrate.get();
     const simtime_t endTime = startTime + duration;
     IMobility *mobility = transmitter->getAntenna()->getMobility();

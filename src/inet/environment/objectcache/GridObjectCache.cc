@@ -46,11 +46,11 @@ void GridObjectCache::initialize(int stage)
         const Coord spaceMin = physicalEnvironment->getSpaceMin();
         const Coord spaceMax = physicalEnvironment->getSpaceMax();
         const Coord spaceSize = spaceMax - spaceMin;
-        if (isNaN(cellSizeX))
+        if (_isNaN(cellSizeX))
             cellSizeX = spaceSize.x / par("cellCountX").doubleValue();
-        if (isNaN(cellSizeY))
+        if (_isNaN(cellSizeY))
             cellSizeY = spaceSize.y / par("cellCountY").doubleValue();
-        if (isNaN(cellSizeZ))
+        if (_isNaN(cellSizeZ))
             cellSizeZ = spaceSize.z / par("cellCountZ").doubleValue();
         Coord voxelSizes(cellSizeX, cellSizeY, cellSizeZ);
         grid = new SpatialGrid(voxelSizes, physicalEnvironment->getSpaceMin(), physicalEnvironment->getSpaceMax());

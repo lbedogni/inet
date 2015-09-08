@@ -253,7 +253,7 @@ class INET_API Coord : public cObject
      */
     bool isUnspecified() const
     {
-        return isNaN(x) && isNaN(y) && isNaN(z);
+        return _isNaN(x) && _isNaN(y) && _isNaN(z);
     }
 
     /**

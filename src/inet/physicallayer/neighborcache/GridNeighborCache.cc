@@ -51,11 +51,11 @@ void GridNeighborCache::initialize(int stage)
         constraintAreaMax = radioMedium->getMediumLimitCache()->getMaxConstraintArea();
         maxSpeed = radioMedium->getMediumLimitCache()->getMaxSpeed().get();
         const Coord constraintAreaSize = constraintAreaMax - constraintAreaMin;
-        if (isNaN(cellSize.x))
+        if (_isNaN(cellSize.x))
             cellSize.x = constraintAreaSize.x / par("cellCountX").doubleValue();
-        if (isNaN(cellSize.y))
+        if (_isNaN(cellSize.y))
             cellSize.y = constraintAreaSize.y / par("cellCountY").doubleValue();
-        if (isNaN(cellSize.z))
+        if (_isNaN(cellSize.z))
             cellSize.z = constraintAreaSize.z / par("cellCountZ").doubleValue();
         fillCubeVector();
         scheduleAt(simTime() + refillPeriod, refillCellsTimer);

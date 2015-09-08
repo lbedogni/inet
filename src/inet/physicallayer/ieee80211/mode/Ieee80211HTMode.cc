@@ -221,14 +221,14 @@ bps Ieee80211HTDataMode::computeNetBitrate() const
 
 bps Ieee80211HTModeBase::getNetBitrate() const
 {
-    if (isNaN(netBitrate.get()))
+    if (_isNaN(netBitrate.get()))
         netBitrate = computeNetBitrate();
     return netBitrate;
 }
 
 bps Ieee80211HTModeBase::getGrossBitrate() const
 {
-    if (isNaN(grossBitrate.get()))
+    if (_isNaN(grossBitrate.get()))
         grossBitrate = computeGrossBitrate();
     return grossBitrate;
 }

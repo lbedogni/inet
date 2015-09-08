@@ -186,7 +186,7 @@ bool RadioMedium::isRadioMacAddress(const IRadio *radio, const MACAddress addres
 bool RadioMedium::isInCommunicationRange(const ITransmission *transmission, const Coord startPosition, const Coord endPosition) const
 {
     m maxCommunicationRange = mediumLimitCache->getMaxCommunicationRange();
-    return isNaN(maxCommunicationRange.get()) ||
+    return _isNaN(maxCommunicationRange.get()) ||
            (transmission->getStartPosition().distance(startPosition) < maxCommunicationRange.get() &&
             transmission->getEndPosition().distance(endPosition) < maxCommunicationRange.get());
 }
@@ -194,7 +194,7 @@ bool RadioMedium::isInCommunicationRange(const ITransmission *transmission, cons
 bool RadioMedium::isInInterferenceRange(const ITransmission *transmission, const Coord startPosition, const Coord endPosition) const
 {
     m maxInterferenceRange = mediumLimitCache->getMaxInterferenceRange();
-    return isNaN(maxInterferenceRange.get()) ||
+    return _isNaN(maxInterferenceRange.get()) ||
            (transmission->getStartPosition().distance(startPosition) < maxInterferenceRange.get() &&
             transmission->getEndPosition().distance(endPosition) < maxInterferenceRange.get());
 }
@@ -482,7 +482,7 @@ void RadioMedium::sendToAffectedRadios(IRadio *radio, const IRadioFrame *frame)
             range = mediumLimitCache->getMaxInterferenceRange(radio).get();
         else
             throw cRuntimeError("Unknown range filter %d", rangeFilter);
-        if (isNaN(range))
+        if (_isNaN(range))
         {
             EV_WARN << "We can't use the NeighborCache for radio " << radio->getId() << ": range is NaN" << endl;
             sendToAllRadios(radio, frame);

@@ -52,7 +52,7 @@ std::ostream& StochasticErrorModel::printToStream(std::ostream& stream, int leve
 
 double StochasticErrorModel::computePacketErrorRate(const ISNIR *snir) const
 {
-    if (!isNaN(packetErrorRate))
+    if (!_isNaN(packetErrorRate))
         return packetErrorRate;
     else {
         double bitErrorRate = computeBitErrorRate(snir);
@@ -64,7 +64,7 @@ double StochasticErrorModel::computePacketErrorRate(const ISNIR *snir) const
 
 double StochasticErrorModel::computeBitErrorRate(const ISNIR *snir) const
 {
-    if (!isNaN(bitErrorRate))
+    if (!_isNaN(bitErrorRate))
         return bitErrorRate;
     else {
         // TODO: compute bit error rate based on symbol error rate and modulation

@@ -325,11 +325,11 @@ void Radio::endReception(cMessage *message)
         EV_INFO << "Sending up " << macFrame << ".\n";
         const ReceptionIndication *indication = check_and_cast<const ReceptionIndication *>(macFrame->getControlInfo());
         emit(minSNIRSignal, indication->getMinSNIR());
-        if (!isNaN(indication->getPacketErrorRate()))
+        if (!_isNaN(indication->getPacketErrorRate()))
             emit(packetErrorRateSignal, indication->getPacketErrorRate());
-        if (!isNaN(indication->getBitErrorRate()))
+        if (!_isNaN(indication->getBitErrorRate()))
             emit(bitErrorRateSignal, indication->getBitErrorRate());
-        if (!isNaN(indication->getSymbolErrorRate()))
+        if (!_isNaN(indication->getSymbolErrorRate()))
             emit(symbolErrorRateSignal, indication->getSymbolErrorRate());
         send(macFrame, upperLayerOut);
         endReceptionTimer = nullptr;

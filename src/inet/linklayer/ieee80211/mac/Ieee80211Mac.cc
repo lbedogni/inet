@@ -633,7 +633,7 @@ void Ieee80211Mac::handleUpperCommand(cMessage *msg)
             Ieee80211ConfigureRadioCommand *newConfigureCommand = check_and_cast<Ieee80211ConfigureRadioCommand *>(msg->getControlInfo());
             if (newConfigureCommand->getChannelNumber() == -1 && oldConfigureCommand->getChannelNumber() != -1)
                 newConfigureCommand->setChannelNumber(oldConfigureCommand->getChannelNumber());
-            if (isNaN(newConfigureCommand->getBitrate().get()) && !isNaN(oldConfigureCommand->getBitrate().get()))
+            if (_isNaN(newConfigureCommand->getBitrate().get()) && !_isNaN(oldConfigureCommand->getBitrate().get()))
                 newConfigureCommand->setBitrate(oldConfigureCommand->getBitrate());
             delete pendingRadioConfigMsg;
             pendingRadioConfigMsg = nullptr;
@@ -676,7 +676,7 @@ void Ieee80211Mac::handleLowerPacket(cPacket *msg)
     validRecMode = false;
     if (cinfo) {
         recFrameModulation = cinfo->getMode();
-        if (!isNaN(recFrameModulation->getDataMode()->getNetBitrate().get()))
+        if (!_isNaN(recFrameModulation->getDataMode()->getNetBitrate().get()))
             validRecMode = true;
     }
 

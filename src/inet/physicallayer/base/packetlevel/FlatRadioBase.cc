@@ -37,10 +37,10 @@ void FlatRadioBase::handleUpperCommand(cMessage *message)
         ConfigureRadioCommand *configureCommand = check_and_cast<ConfigureRadioCommand *>(message->getControlInfo());
         NarrowbandRadioBase::handleUpperCommand(message);
         W newPower = configureCommand->getPower();
-        if (!isNaN(newPower.get()))
+        if (!_isNaN(newPower.get()))
             setPower(newPower);
         bps newBitrate = configureCommand->getBitrate();
-        if (!isNaN(newBitrate.get()))
+        if (!_isNaN(newBitrate.get()))
             setBitrate(newBitrate);
     }
     else
