@@ -15,15 +15,17 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef __INET_MEDIUMVISUALIZER_H
-#define __INET_MEDIUMVISUALIZER_H
+#ifndef __INET_MEDIUMCANVASVISUALIZER_H
+#define __INET_MEDIUMCANVASVISUALIZER_H
 
-#include "inet/common/figures/TrailFigure.h"
 #include "inet/common/figures/HeatMapFigure.h"
-#include "inet/physicallayer/contract/packetlevel/ITransmission.h"
+#include "inet/common/figures/TrailFigure.h"
+#include "inet/common/geometry/common/CanvasProjection.h"
+#include "inet/common/visualizer/VisualizerBase.h"
+#include "inet/physicallayer/base/packetlevel/PhysicalLayerDefs.h"
 #include "inet/physicallayer/contract/packetlevel/IRadioFrame.h"
 #include "inet/physicallayer/contract/packetlevel/IReceptionDecision.h"
-#include "inet/physicallayer/base/packetlevel/PhysicalLayerDefs.h"
+#include "inet/physicallayer/contract/packetlevel/ITransmission.h"
 
 namespace inet {
 
@@ -34,7 +36,7 @@ class RadioMedium;
 /**
  * This class provides the visualization of the communication on the radio medium.
  */
-class INET_API MediumVisualizer : public cSimpleModule
+class INET_API MediumCanvasVisualizer : public VisualizerBase, public RadioMedium::IMediumListener
 {
   protected:
     /** @name Parameters */
@@ -42,7 +44,11 @@ class INET_API MediumVisualizer : public cSimpleModule
     /**
      * The corresponding radio medium is never nullptr.
      */
-    const RadioMedium *radioMedium;
+    RadioMedium *radioMedium;
+    /**
+     * The 2D projection used on the canvas.
+     */
+    const CanvasProjection *canvasProjection;
     /**
      * Determines whether the visualizer displays the ongoing communications or not.
      */
@@ -118,20 +124,19 @@ class INET_API MediumVisualizer : public cSimpleModule
     virtual void scheduleUpdateCanvasTimer();
 
   public:
-    MediumVisualizer();
-    virtual ~MediumVisualizer();
+    MediumCanvasVisualizer();
+    virtual ~MediumCanvasVisualizer();
 
-    virtual void addTransmission(const ITransmission *transmission);
-    virtual void removeTransmission(const ITransmission *transmission);
+    virtual void mediumChanged();
+    virtual void transmissionAdded(const ITransmission *transmission);
+    virtual void transmissionRemoved(const ITransmission *transmission);
+    virtual void packetReceived(const IReceptionDecision *decision);
 
-    virtual void receivePacket(const IReceptionDecision *decision);
-
-    virtual void mediumChanged() const;
 };
 
 } // namespace physicallayer
 
 } // namespace inet
 
-#endif // ifndef __INET_MEDIUMVISUALIZER_H
+#endif // ifndef __INET_MEDIUMCANVASVISUALIZER_H
 

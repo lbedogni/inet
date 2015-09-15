@@ -50,6 +50,8 @@ void TracingObstacleLoss::initialize(int stage)
             canvas->addFigureBelow(intersectionTrail, canvas->getSubmodulesLayer());
         }
     }
+    else if (stage == INITSTAGE_PHYSICAL_ENVIRONMENT)
+        canvasProjection = CanvasProjection::getCanvasProjection(getSimulation()->getSystemModule()->getCanvas());
 }
 
 void TracingObstacleLoss::finish()
@@ -115,8 +117,8 @@ double TracingObstacleLoss::computeObjectLoss(const IPhysicalObject *object, Hz 
             if (leaveIntersectionTrail) {
                 cLineFigure *intersectionLine = new cLineFigure();
                 intersectionLine->setTags("obstacle_intersection recent_history");
-                intersectionLine->setStart(environment->computeCanvasPoint(rotatedIntersection1 + position));
-                intersectionLine->setEnd(environment->computeCanvasPoint(rotatedIntersection2 + position));
+                intersectionLine->setStart(canvasProjection->computeCanvasPoint(rotatedIntersection1 + position));
+                intersectionLine->setEnd(canvasProjection->computeCanvasPoint(rotatedIntersection2 + position));
                 intersectionLine->setLineColor(cFigure::RED);
                 intersectionLine->setLineWidth(1);
                 intersectionTrail->addFigure(intersectionLine);
@@ -128,15 +130,15 @@ double TracingObstacleLoss::computeObjectLoss(const IPhysicalObject *object, Hz 
                 normal1 = normal1 / normal1.length() * intersectionDistance / 10;
                 normal2 = normal2 / normal2.length() * intersectionDistance / 10;
                 cLineFigure *normal1Line = new cLineFigure();
-                normal1Line->setStart(environment->computeCanvasPoint(rotatedIntersection1 + position));
-                normal1Line->setEnd(environment->computeCanvasPoint(rotatedIntersection1 + position + rotation.rotateVectorClockwise(normal1)));
+                normal1Line->setStart(canvasProjection->computeCanvasPoint(rotatedIntersection1 + position));
+                normal1Line->setEnd(canvasProjection->computeCanvasPoint(rotatedIntersection1 + position + rotation.rotateVectorClockwise(normal1)));
                 normal1Line->setLineColor(cFigure::GREY);
                 normal1Line->setTags("obstacle_intersection face_normal_vector recent_history");
                 normal1Line->setLineWidth(1);
                 intersectionTrail->addFigure(normal1Line);
                 cLineFigure *normal2Line = new cLineFigure();
-                normal2Line->setStart(environment->computeCanvasPoint(rotatedIntersection2 + position));
-                normal2Line->setEnd(environment->computeCanvasPoint(rotatedIntersection2 + position + rotation.rotateVectorClockwise(normal2)));
+                normal2Line->setStart(canvasProjection->computeCanvasPoint(rotatedIntersection2 + position));
+                normal2Line->setEnd(canvasProjection->computeCanvasPoint(rotatedIntersection2 + position + rotation.rotateVectorClockwise(normal2)));
                 normal2Line->setLineColor(cFigure::GREY);
                 normal2Line->setTags("obstacle_intersection face_normal_vector recent_history");
                 normal2Line->setLineWidth(1);

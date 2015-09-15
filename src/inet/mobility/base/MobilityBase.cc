@@ -21,8 +21,10 @@
  **************************************************************************/
 
 #include "inet/common/INETMath.h"
-#include "inet/environment/contract/IPhysicalEnvironment.h"
+#include "inet/common/OSGUtils.h"
 #include "inet/mobility/base/MobilityBase.h"
+#include "inet/mobility/visualizer/MobilityCanvasVisualizer.h"
+#include "inet/mobility/visualizer/MobilityOsgVisualizer.h"
 
 namespace inet {
 
@@ -80,10 +82,15 @@ void MobilityBase::initialize(int stage)
         WATCH(constraintAreaMin);
         WATCH(constraintAreaMax);
         WATCH(lastPosition);
+        positionAttitudeTransform = MobilityOsgVisualizer::createOsgNode(this);
     }
     else if (stage == INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
+        auto visualizationTarget = visualRepresentation->getParentModule();
+        canvasProjection = CanvasProjection::getCanvasProjection(visualizationTarget->getCanvas());
         initializeOrientation();
         initializePosition();
+        auto scene = inet::osg::getScene(visualizationTarget);
+        scene->addChild(positionAttitudeTransform);
     }
 }
 
@@ -148,14 +155,8 @@ void MobilityBase::updateVisualRepresentation()
 {
     EV_DEBUG << "current position = " << lastPosition << endl;
     if (hasGUI() && visualRepresentation) {
-        cFigure::Point point = IPhysicalEnvironment::computeCanvasPoint(lastPosition);
-        char buf[32];
-        snprintf(buf, sizeof(buf), "%lf", point.x);
-        buf[sizeof(buf) - 1] = 0;
-        visualRepresentation->getDisplayString().setTagArg("p", 0, buf);
-        snprintf(buf, sizeof(buf), "%lf", point.y);
-        buf[sizeof(buf) - 1] = 0;
-        visualRepresentation->getDisplayString().setTagArg("p", 1, buf);
+        MobilityCanvasVisualizer::setPosition(lastPosition, visualRepresentation, canvasProjection);
+        MobilityOsgVisualizer::setPosition(lastPosition, positionAttitudeTransform);
     }
 }
 

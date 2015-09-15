@@ -20,6 +20,7 @@
 
 #include "inet/common/IVisitor.h"
 #include "inet/common/figures/TrailFigure.h"
+#include "inet/common/geometry/common/CanvasProjection.h"
 #include "inet/environment/contract/IPhysicalEnvironment.h"
 #include "inet/physicallayer/contract/packetlevel/IRadioMedium.h"
 #include "inet/physicallayer/contract/packetlevel/IObstacleLoss.h"
@@ -64,6 +65,10 @@ class INET_API TracingObstacleLoss : public cModule, public IObstacleLoss
      */
     IPhysicalEnvironment *environment;
     /**
+     * The 2D projection used on the canvas.
+     */
+    const CanvasProjection *canvasProjection;
+    /**
      * Leaves graphical trail of obstacle intersections.
      */
     bool leaveIntersectionTrail;
@@ -94,6 +99,7 @@ class INET_API TracingObstacleLoss : public cModule, public IObstacleLoss
     //@}
 
   protected:
+    virtual int numInitStages() const override { return NUM_INIT_STAGES; }
     virtual void initialize(int stage) override;
     virtual void finish() override;
 

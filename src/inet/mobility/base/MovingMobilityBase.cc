@@ -21,11 +21,8 @@
  **************************************************************************/
 
 #include "inet/mobility/base/MovingMobilityBase.h"
-#include "inet/environment/contract/IPhysicalEnvironment.h"
 
 namespace inet {
-
-using namespace inet::physicalenvironment;
 
 MovingMobilityBase::MovingMobilityBase() :
     moveTimer(nullptr),
@@ -84,10 +81,10 @@ void MovingMobilityBase::updateVisualRepresentation()
     if (leaveMovementTrail && visualRepresentation && hasGUI()) {
         cFigure::Point startPosition;
         if (movementTrail->getNumFigures() == 0)
-            startPosition = IPhysicalEnvironment::computeCanvasPoint(lastPosition);
+            startPosition = canvasProjection->computeCanvasPoint(lastPosition);
         else
             startPosition = static_cast<cLineFigure *>(movementTrail->getFigure(movementTrail->getNumFigures() - 1))->getEnd();
-        cFigure::Point endPosition = IPhysicalEnvironment::computeCanvasPoint(lastPosition);
+        cFigure::Point endPosition = canvasProjection->computeCanvasPoint(lastPosition);
         double dx = startPosition.x - endPosition.x;
         double dy = startPosition.y - endPosition.y;
         if (movementTrail->getNumFigures() == 0 || dx * dx + dy * dy > (lastSpeed * updateInterval.dbl()).squareLength()) {

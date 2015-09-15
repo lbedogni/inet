@@ -52,6 +52,7 @@ CommunicationCacheBase::TransmissionCacheEntry::TransmissionCacheEntry() :
     interferenceEndTime(NaN),
     frame(nullptr),
     figure(nullptr),
+    node(nullptr),
     receptionCacheEntries(nullptr)
 {
 }
@@ -199,6 +200,21 @@ void CommunicationCacheBase::setCachedFigure(const ITransmission *transmission, 
 void CommunicationCacheBase::removeCachedFigure(const ITransmission *transmission)
 {
     getTransmissionCacheEntry(transmission)->figure = nullptr;
+}
+
+osg::Node *CommunicationCacheBase::getCachedOsgNode(const ITransmission *transmission)
+{
+    return getTransmissionCacheEntry(transmission)->node;
+}
+
+void CommunicationCacheBase::setCachedOsgNode(const ITransmission *transmission, osg::Node *node)
+{
+    getTransmissionCacheEntry(transmission)->node = node;
+}
+
+void CommunicationCacheBase::removeCachedOsgNode(const ITransmission *transmission)
+{
+    getTransmissionCacheEntry(transmission)->node = nullptr;
 }
 
 const IArrival *CommunicationCacheBase::getCachedArrival(const IRadio *radio, const ITransmission *transmission)

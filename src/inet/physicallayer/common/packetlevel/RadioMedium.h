@@ -28,7 +28,6 @@
 #include "inet/physicallayer/contract/packetlevel/INeighborCache.h"
 #include "inet/physicallayer/contract/packetlevel/ICommunicationCache.h"
 #include "inet/physicallayer/common/packetlevel/CommunicationLog.h"
-#include "inet/physicallayer/common/packetlevel/MediumVisualizer.h"
 #include "inet/linklayer/common/MACAddress.h"
 
 namespace inet {
@@ -41,6 +40,15 @@ namespace physicallayer {
 // TODO: add tests for various optimization configurations
 class INET_API RadioMedium : public cSimpleModule, public cListener, public IRadioMedium
 {
+  public:
+    class INET_API IMediumListener {
+      public:
+        virtual void mediumChanged() = 0;
+        virtual void transmissionAdded(const ITransmission *transmission) = 0;
+        virtual void transmissionRemoved(const ITransmission *transmission) = 0;
+        virtual void packetReceived(const IReceptionDecision *decision) = 0;
+    };
+
   protected:
     enum RangeFilterKind {
         RANGE_FILTER_ANYWHERE,
@@ -131,6 +139,10 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
      * removed from the beginning. This list doesn't contain nullptr values.
      */
     std::vector<const ITransmission *> transmissions;
+    /**
+     * TODO
+     */
+    std::vector<IMediumListener *> listeners;
     //@}
 
     /** @name Cache */
@@ -155,14 +167,6 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
      * The communication log output recorder.
      */
     CommunicationLog communicationLog;
-    //@}
-
-    /** @name Graphics */
-    //@{
-    /**
-     * The visualizer for the communication on the medium.
-     */
-    MediumVisualizer *mediumVisualizer;
     //@}
 
     /** @name Statistics */
@@ -305,11 +309,22 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
     virtual const IReceptionDecision *getReceptionDecision(const IRadio *receiver, const IListening *listening, const ITransmission *transmission) const override;
     //@}
 
+    /** @name Notification */
+    //@{
+    virtual void fireMediumChanged() const;
+    virtual void fireTransmissionAdded(const ITransmission *transmission) const;
+    virtual void fireTransmissionRemoved(const ITransmission *transmission) const;
+    virtual void firePacketReceived(const IReceptionDecision *decision) const;
+    //@}
+
   public:
     RadioMedium();
     virtual ~RadioMedium();
 
     virtual std::ostream& printToStream(std::ostream &stream, int level) const override;
+
+    virtual void addListener(IMediumListener *listener) { listeners.push_back(listener); }
+    virtual void removeListener(IMediumListener *listener) { listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end()); }
 
     virtual const IMaterial *getMaterial() const override { return material; }
     virtual const IPropagation *getPropagation() const override { return propagation; }

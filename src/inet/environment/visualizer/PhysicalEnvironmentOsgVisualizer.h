@@ -15,33 +15,39 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef __INET_IPHYSICALENVIRONMENT_H
-#define __INET_IPHYSICALENVIRONMENT_H
+#ifndef __INET_PHYSICALENVIRONMENTOSGVISUALIZER_H
+#define __INET_PHYSICALENVIRONMENTOSGVISUALIZER_H
 
-#include "inet/common/IVisitor.h"
-#include "inet/common/geometry/common/Coord.h"
-#include "inet/common/geometry/common/Rotation.h"
-#include "inet/common/geometry/common/EulerAngles.h"
-#include "inet/environment/contract/IPhysicalObject.h"
-#include "inet/environment/contract/IMaterialRegistry.h"
+#include "inet/common/visualizer/VisualizerBase.h"
+#include "inet/environment/common/PhysicalEnvironment.h"
 
 namespace inet {
 
 namespace physicalenvironment {
 
-class INET_API IPhysicalEnvironment
+class INET_API PhysicalEnvironmentOsgVisualizer : public VisualizerBase
 {
-  public:
-    virtual const Coord& getSpaceMin() const = 0;
-    virtual const Coord& getSpaceMax() const = 0;
-    virtual const IMaterialRegistry *getMaterialRegistry() const = 0;
+  protected:
+    /** @name Context */
+    //@{
+    const PhysicalEnvironment *physicalEnvironment = nullptr;
+    //@}
 
-    virtual void visitObjects(const IVisitor *visitor, const LineSegment& lineSegment) const = 0;
+  protected:
+    virtual int numInitStages() const override { return NUM_INIT_STAGES; }
+    virtual void initialize(int stage) override;
+
+    virtual osg::Geode *createPlayground();
+    virtual void updateScene();
+
+  public:
+    PhysicalEnvironmentOsgVisualizer() {}
+    virtual ~PhysicalEnvironmentOsgVisualizer() {}
 };
 
 } // namespace physicalenvironment
 
 } // namespace inet
 
-#endif // ifndef __INET_IPHYSICALENVIRONMENT_H
+#endif // ifndef __INET_PHYSICALENVIRONMENTOSGVISUALIZER_H
 
