@@ -231,14 +231,17 @@ bool ICMP::possiblyLocalBroadcast(const IPv4Address& addr, int interfaceId)
 
 void ICMP::processUpperMessage(cMessage *msg)
 {
-    L3ErrorControlInfo *icmpCtrl = check_and_cast<L3ErrorControlInfo *>(msg->removeControlInfo());
+    L3Error *errmsg = check_and_cast<L3Error *>(msg);
+    cPacket *pk = errmsg->decapsulate();
+    L3ErrorControlInfo *icmpCtrl = check_and_cast<L3ErrorControlInfo *>(errmsg->getControlInfo());
     IPv4ControlInfo *ctrl = check_and_cast<IPv4ControlInfo *>(icmpCtrl->getNetworkProtocolControlInfo());
     icmpCtrl->setNetworkProtocolControlInfo(nullptr);
     ICMPType type;
     ICMPCode code;
     convertErrorCodeToTypeAndCode(icmpCtrl->getErrorCode(), type, code);
-    sendErrorMessage(PK(msg), ctrl, type, code);
+    sendErrorMessage(pk, ctrl, type, code);
     delete icmpCtrl;
+    delete errmsg;
 }
 
 void ICMP::sendUpIcmpError(IPv4Datagram *bogusL3Packet, ICMPType icmpType, int icmpCode)
