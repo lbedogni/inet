@@ -41,6 +41,7 @@ class INET_API ICMP : public cSimpleModule, public IProtocolRegistrationListener
     std::set<int> transportProtocols;    // where to send up packets
   protected:
     virtual void processICMPMessage(ICMPMessage *);
+    virtual void processIcmpErrorFromIPv4(IPv4Datagram *dgram);
     virtual void processUpperMessage(cMessage *msg);
     virtual void errorOut(ICMPMessage *);
     virtual void processEchoRequest(ICMPMessage *);
@@ -48,6 +49,8 @@ class INET_API ICMP : public cSimpleModule, public IProtocolRegistrationListener
     virtual void sendToIP(ICMPMessage *msg);
     virtual bool possiblyLocalBroadcast(const IPv4Address& addr, int interfaceId);
     virtual void handleRegisterProtocol(const Protocol& protocol, cGate *gate) override;
+    virtual void sendUpIcmpError(IPv4Datagram *bogusL3Packet, ICMPType icmpType, int icmpCode);
+    virtual void sendErrorMessage(cPacket *transportPacket, IPv4ControlInfo *ctrl, ICMPType type, ICMPCode code);
 
   public:
     /**
@@ -57,17 +60,6 @@ class INET_API ICMP : public cSimpleModule, public IProtocolRegistrationListener
      * Kludge: if inputInterfaceId cannot be determined, pass in -1.
      */
     virtual void sendErrorMessage(IPv4Datagram *datagram, int inputInterfaceId, ICMPType type, ICMPCode code);
-
-    /**
-     * This method can be called from other modules to send an ICMP error packet
-     * in response to a received bogus packet from the transport layer (like UDP).
-     * It will not send ICMP error in response to broadcast or multicast packets --
-     * in that case it will simply delete the packet.
-     * The ICMP error packet needs to include (part of) the original IPv4 datagram,
-     * so this function will wrap back the transport packet into the IPv4 datagram
-     * based on its IPv4ControlInfo.
-     */
-    virtual void sendErrorMessage(cPacket *transportPacket, IPv4ControlInfo *ctrl, ICMPType type, ICMPCode code);
 
   protected:
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }

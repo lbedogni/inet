@@ -18,6 +18,7 @@
 
 #include "inet/common/IProtocolRegistrationListener.h"
 #include "inet/routing/aodv/AODVRouting.h"
+#include "inet/networklayer/contract/L3Error.h"
 #include "inet/networklayer/ipv4/ICMPMessage.h"
 #include "inet/networklayer/ipv4/IPv4Route.h"
 
@@ -145,12 +146,7 @@ void AODVRouting::handleMessage(cMessage *msg)
         else
             throw cRuntimeError("Unknown self message");
     }
-    else if (ICMPMessage *icmpPacket = dynamic_cast<ICMPMessage *>(msg)) {
-        // ICMP packet arrived, dropped
-        delete icmpPacket;
-    }
-    else {
-        UDPPacket *udpPacket = check_and_cast<UDPPacket *>(msg);
+    else if (UDPPacket *udpPacket = dynamic_cast<UDPPacket *>(msg)) {
         AODVControlPacket *ctrlPacket = check_and_cast<AODVControlPacket *>(udpPacket->decapsulate());
         INetworkProtocolControlInfo *udpProtocolCtrlInfo = check_and_cast<INetworkProtocolControlInfo *>(udpPacket->getControlInfo());
         L3Address sourceAddr = udpProtocolCtrlInfo->getSourceAddress();
@@ -178,6 +174,16 @@ void AODVRouting::handleMessage(cMessage *msg)
         }
         delete udpPacket;
     }
+    else if (ICMPMessage *icmpPacket = dynamic_cast<ICMPMessage *>(msg)) {
+        // ICMP packet arrived, dropped
+        delete icmpPacket;
+    }
+    else if (L3Error *errPk = dynamic_cast<L3Error *>(msg)) {
+        // ICMP packet arrived, dropped
+        delete errPk;
+    }
+    else
+        throw cRuntimeError("Unknown message (%s)%s", msg->getClassName(), msg->getName());
 }
 
 INetfilter::IHook::Result AODVRouting::ensureRouteForDatagram(INetworkDatagram *datagram)

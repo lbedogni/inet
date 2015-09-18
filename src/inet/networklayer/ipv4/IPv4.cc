@@ -32,6 +32,8 @@
 #include "inet/networklayer/contract/L3SocketCommand_m.h"
 #include "inet/networklayer/contract/ipv4/IPv4ControlInfo.h"
 #include "inet/networklayer/ipv4/ICMPMessage_m.h"
+#include "inet/networklayer/ipv4/IcmpErrorFromIPControlInfo_m.h"
+#include "inet/linklayer/common/Ieee802Ctrl.h"
 #include "inet/networklayer/ipv4/IIPv4RoutingTable.h"
 #include "inet/networklayer/ipv4/IPv4Datagram.h"
 #include "inet/networklayer/ipv4/IPv4DataNotificationData.h"
@@ -46,7 +48,8 @@ Define_Module(IPv4);
 // a local interface-k hasznalata eseten szinten hianyozhatnak bizonyos NetFilter hook-ok
 
 IPv4::IPv4() :
-    isUp(true)
+    isUp(true),
+    fragbuf(this)
 {
 }
 
@@ -200,7 +203,7 @@ void IPv4::handleIncomingDatagram(IPv4Datagram *datagram, const InterfaceEntry *
         double relativeHeaderLength = datagram->getHeaderLength() / (double)datagram->getByteLength();
         if (dblrand() <= relativeHeaderLength) {
             EV_WARN << "bit error found, sending ICMP_PARAMETER_PROBLEM\n";
-            icmp->sendErrorMessage(datagram, fromIE->getInterfaceId(), ICMP_PARAMETER_PROBLEM, 0);
+            sendToIcmp(TO_NETWORK, datagram, fromIE->getInterfaceId(), ICMP_PARAMETER_PROBLEM, 0);
             return;
         }
     }
@@ -423,7 +426,7 @@ void IPv4::routeUnicastPacket(IPv4Datagram *datagram, const InterfaceEntry *from
     if (!destIE) {    // no route found
         EV_WARN << "unroutable, sending ICMP_DESTINATION_UNREACHABLE\n";
         numUnroutable++;
-        icmp->sendErrorMessage(datagram, fromIE ? fromIE->getInterfaceId() : -1, ICMP_DESTINATION_UNREACHABLE, 0);
+        sendToIcmp(fromIE ? TO_NETWORK : TO_LOCAL, datagram, fromIE ? fromIE->getInterfaceId() : -1, ICMP_DESTINATION_UNREACHABLE, 0);
     }
     else {    // fragment and send
         L3Address nextHop(nextHopAddr);
@@ -603,7 +606,7 @@ void IPv4::reassembleAndDeliverFinish(IPv4Datagram *datagram, const InterfaceEnt
     else {
         EV_ERROR << "Transport protocol ID=" << protocol << " not connected, discarding packet\n";
         int inputInterfaceId = fromIE ? fromIE->getInterfaceId() : -1;
-        icmp->sendErrorMessage(datagram, inputInterfaceId, ICMP_DESTINATION_UNREACHABLE, ICMP_DU_PROTOCOL_UNREACHABLE);
+        sendToIcmp(TO_NETWORK, datagram, inputInterfaceId, ICMP_DESTINATION_UNREACHABLE, ICMP_DU_PROTOCOL_UNREACHABLE);
     }
 }
 
@@ -651,7 +654,8 @@ void IPv4::fragmentAndSend(IPv4Datagram *datagram, const InterfaceEntry *ie, IPv
     if (datagram->getTimeToLive() < 0) {
         // drop datagram, destruction responsibility in ICMP
         EV_WARN << "datagram TTL reached zero, sending ICMP_TIME_EXCEEDED\n";
-        icmp->sendErrorMessage(datagram, -1    /*TODO*/, ICMP_TIME_EXCEEDED, 0);
+        const InterfaceEntry *srcIE = getSourceInterfaceFrom(datagram);
+        sendToIcmp(TO_NETWORK, datagram, srcIE ? srcIE->getInterfaceId() : -1, ICMP_TIME_EXCEEDED, 0);
         numDropped++;
         return;
     }
@@ -667,8 +671,8 @@ void IPv4::fragmentAndSend(IPv4Datagram *datagram, const InterfaceEntry *ie, IPv
     // if "don't fragment" bit is set, throw datagram away and send ICMP error message
     if (datagram->getDontFragment()) {
         EV_WARN << "datagram larger than MTU and don't fragment bit set, sending ICMP_DESTINATION_UNREACHABLE\n";
-        icmp->sendErrorMessage(datagram, -1    /*TODO*/, ICMP_DESTINATION_UNREACHABLE,
-                ICMP_DU_FRAGMENTATION_NEEDED);
+        const InterfaceEntry *srcIE = getSourceInterfaceFrom(datagram);
+        sendToIcmp(TO_NETWORK, datagram, srcIE ? srcIE->getInterfaceId() : -1, ICMP_DESTINATION_UNREACHABLE, ICMP_DU_FRAGMENTATION_NEEDED);
         numDropped++;
         return;
     }
@@ -808,6 +812,8 @@ void IPv4::sendDatagramToOutput(IPv4Datagram *datagram, const InterfaceEntry *ie
 
 void IPv4::arpResolutionCompleted(IARP::Notification *entry)
 {
+    Enter_Method("arpResolutionCompleted");
+
     if (entry->l3Address.getType() != L3Address::IPv4)
         return;
     auto it = pendingPackets.find(entry->l3Address.toIPv4());
@@ -827,6 +833,8 @@ void IPv4::arpResolutionCompleted(IARP::Notification *entry)
 
 void IPv4::arpResolutionTimedOut(IARP::Notification *entry)
 {
+    Enter_Method("arpResolutionTimedOut");
+
     if (entry->l3Address.getType() != L3Address::IPv4)
         return;
     auto it = pendingPackets.find(entry->l3Address.toIPv4());
@@ -1151,6 +1159,17 @@ void IPv4::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj)
     if (signalID == IARP::failedARPResolutionSignal) {
         arpResolutionTimedOut(check_and_cast<IARP::Notification *>(obj));
     }
+}
+
+void IPv4::sendToIcmp(IcmpErrorDirection direction, IPv4Datagram* datagram, int srcInterfaceId, ICMPType type, ICMPCode code)
+{
+    auto ctrl = new IcmpErrorFromIPControlInfo();
+    ctrl->setDirection(direction);
+    ctrl->setInterfaceId(srcInterfaceId);
+    ctrl->setIcmpType(type);
+    ctrl->setIcmpCode(code);
+    datagram->setControlInfo(ctrl);
+    send(datagram, "transportOut");
 }
 
 } // namespace inet

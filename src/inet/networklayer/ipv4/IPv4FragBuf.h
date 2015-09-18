@@ -22,12 +22,13 @@
 
 #include "inet/common/INETDefs.h"
 
-#include "inet/networklayer/contract/ipv4/IPv4Address.h"
 #include "inet/common/ReassemblyBuffer.h"
+#include "inet/networklayer/contract/ipv4/IPv4Address.h"
 
 namespace inet {
 
 class ICMP;
+class IPv4;
 class IPv4Datagram;
 
 /**
@@ -68,13 +69,15 @@ class INET_API IPv4FragBuf
     Buffers bufs;
 
     // needed for TIME_EXCEEDED errors
-    ICMP *icmpModule;
+    ICMP *icmpModule = nullptr;
+
+    IPv4 *ipv4Module = nullptr;
 
   public:
     /**
      * Ctor.
      */
-    IPv4FragBuf();
+    IPv4FragBuf(IPv4 *ipv4);
 
     /**
      * Dtor.

@@ -31,7 +31,7 @@ class IInterfaceTable;
 class INetworkProtocolControlInfo;
 class IPv4ControlInfo;
 class IPv6ControlInfo;
-class IcmpErrorControlInfo;
+class L3Error;
 class UDPPacket;
 class InterfaceEntry;
 
@@ -157,7 +157,7 @@ class INET_API UDP : public cSimpleModule, public ILifecycle
     virtual void sendUpErrorIndication(SockDesc *sd, const L3Address& localAddr, ushort localPort, const L3Address& remoteAddr, ushort remotePort);
 
     // process an ICMP error packet
-    virtual void processICMPError(UDPPacket *icmpErrorMsg, IcmpErrorControlInfo *ctrl);    // TODO use ICMPMessage
+    virtual void processICMPError(L3Error *errorMsg);    // TODO use ICMPMessage
 
     // process UDP packets coming from IP
     virtual void processUDPPacket(UDPPacket *udpPacket, INetworkProtocolControlInfo *nwCtrl);

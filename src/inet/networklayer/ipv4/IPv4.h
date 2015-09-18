@@ -22,15 +22,16 @@
 #include "inet/common/INETDefs.h"
 
 #include "inet/common/IProtocolRegistrationListener.h"
-#include "inet/networklayer/contract/IARP.h"
-#include "inet/networklayer/ipv4/ICMP.h"
+#include "inet/common/ProtocolMap.h"
 #include "inet/common/lifecycle/ILifecycle.h"
+#include "inet/common/queue/QueueBase.h"
+#include "inet/networklayer/contract/IARP.h"
 #include "inet/networklayer/contract/INetfilter.h"
 #include "inet/networklayer/contract/INetworkProtocol.h"
+#include "inet/networklayer/ipv4/ICMP.h"
+#include "inet/networklayer/ipv4/IcmpErrorFromIPControlInfo_m.h"
 #include "inet/networklayer/ipv4/IPv4Datagram.h"
 #include "inet/networklayer/ipv4/IPv4FragBuf.h"
-#include "inet/common/ProtocolMap.h"
-#include "inet/common/queue/QueueBase.h"
 
 namespace inet {
 
@@ -220,6 +221,8 @@ class INET_API IPv4 : public QueueBase, public INetfilter, public ILifecycle, pu
 
     virtual void sendPacketToNIC(cPacket *packet, const InterfaceEntry *ie);
 
+    virtual void sendToIcmp(IcmpErrorDirection direction, IPv4Datagram* dgram, int srcInterfaceId, ICMPType type, ICMPCode code);
+
   public:
     IPv4();
     virtual ~IPv4();
@@ -304,6 +307,8 @@ class INET_API IPv4 : public QueueBase, public INetfilter, public ILifecycle, pu
     virtual void stop();
     virtual void start();
     virtual void flush();
+
+    friend class IPv4FragBuf;
 };
 
 } // namespace inet

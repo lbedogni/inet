@@ -23,15 +23,16 @@
 #include "inet/common/RawPacket.h"
 #include "inet/common/serializer/SerializerBase.h"
 #include "inet/networklayer/ipv4/ICMP.h"
+#include "inet/networklayer/ipv4/IPv4.h"
 #include "inet/networklayer/ipv4/IPv4Datagram.h"
 
 namespace inet {
 
 //TODO need solution for fragments with encapsulated RawPacket contains bytes of fragment or bytes of total packet
 
-IPv4FragBuf::IPv4FragBuf()
+IPv4FragBuf::IPv4FragBuf(IPv4 *ipv4)
+    : ipv4Module(ipv4)
 {
-    icmpModule = nullptr;
 }
 
 IPv4FragBuf::~IPv4FragBuf()
@@ -167,7 +168,8 @@ void IPv4FragBuf::purgeStaleFragments(simtime_t lastupdate)
             // because its length (being a fragment) is smaller than the encapsulated
             // packet, resulting in "length became negative" error. Use getEncapsulatedPacket().
             EV_WARN << "datagram fragment timed out in reassembly buffer, sending ICMP_TIME_EXCEEDED\n";
-            icmpModule->sendErrorMessage(buf.datagram, -1    /*TODO*/, ICMP_TIME_EXCEEDED, 0);
+            const InterfaceEntry *srcIE = ipv4Module->getSourceInterfaceFrom(buf.datagram);
+            icmpModule->sendErrorMessage(buf.datagram, srcIE ? srcIE->getInterfaceId() : -1, ICMP_TIME_EXCEEDED, 0);
 
             // delete
             auto oldi = i++;

@@ -24,18 +24,10 @@
 #include "inet/common/IProtocolRegistrationListener.h"
 #include "inet/common/lifecycle/NodeOperations.h"
 #include "inet/common/lifecycle/NodeStatus.h"
+#include "inet/networklayer/contract/L3Error.h"
 #include "inet/transportlayer/tcp/TCPConnection.h"
 #include "inet/transportlayer/tcp_common/TCPSegment.h"
 #include "inet/transportlayer/contract/tcp/TCPCommand_m.h"
-
-#ifdef WITH_IPv4
-#include "inet/networklayer/ipv4/ICMPMessage_m.h"
-#endif // ifdef WITH_IPv4
-
-#ifdef WITH_IPv6
-#include "inet/networklayer/icmpv6/ICMPv6Message_m.h"
-#endif // ifdef WITH_IPv6
-
 #include "inet/transportlayer/tcp/queues/TCPByteStreamRcvQueue.h"
 #include "inet/transportlayer/tcp/queues/TCPByteStreamSendQueue.h"
 #include "inet/transportlayer/tcp/queues/TCPMsgBasedRcvQueue.h"
@@ -127,14 +119,7 @@ void TCP::handleMessage(cMessage *msg)
             removeConnection(conn);
     }
     else if (msg->arrivedOn("ipIn")) {
-        if (false
-#ifdef WITH_IPv4
-            || dynamic_cast<ICMPMessage *>(msg)
-#endif // ifdef WITH_IPv4
-#ifdef WITH_IPv6
-            || dynamic_cast<ICMPv6Message *>(msg)
-#endif // ifdef WITH_IPv6
-            )
+        if (dynamic_cast<L3Error *>(msg))
         {
             EV_DETAIL << "ICMP error received -- discarding\n";    // FIXME can ICMP packets really make it up to TCP???
             delete msg;

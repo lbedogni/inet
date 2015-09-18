@@ -22,32 +22,24 @@
 //#include "headers/in_systm.h"
 #include "lwip/lwip_ip.h"
 
-#ifdef WITH_IPv4
-#include "inet/networklayer/ipv4/ICMPMessage_m.h"
-#endif // ifdef WITH_IPv4
-
-#ifdef WITH_IPv6
-#include "inet/networklayer/icmpv6/ICMPv6Message_m.h"
-#endif // ifdef WITH_IPv6
-
 #include "inet/common/IProtocolRegistrationListener.h"
+#include "inet/common/ModuleAccess.h"
+#include "inet/common/lifecycle/NodeStatus.h"
+#include "inet/common/lifecycle/LifecycleOperation.h"
+#include "inet/common/serializer/TCPIPchecksum.h"
+#include "inet/common/serializer/tcp/TCPSerializer.h"
+#include "inet/common/serializer/tcp/headers/tcphdr.h"
+#include "inet/networklayer/common/IPProtocolId_m.h"
 #include "inet/networklayer/contract/IL3AddressType.h"
 #include "inet/networklayer/contract/INetworkProtocolControlInfo.h"
-#include "inet/networklayer/common/IPProtocolId_m.h"
-
-#include "inet/common/serializer/tcp/headers/tcphdr.h"
+#include "inet/networklayer/contract/L3Error.h"
 #include "lwip/lwip_tcp.h"
 #include "inet/transportlayer/contract/tcp/TCPCommand_m.h"
-#include "inet/common/serializer/TCPIPchecksum.h"
+#include "inet/transportlayer/tcp_common/TCPSegment.h"
 #include "inet/transportlayer/tcp_lwip/TcpLwipConnection.h"
 #include "inet/transportlayer/tcp_lwip/queues/TcpLwipByteStreamQueues.h"
 #include "inet/transportlayer/tcp_lwip/queues/TcpLwipMsgBasedQueues.h"
 #include "inet/transportlayer/tcp_lwip/queues/TcpLwipVirtualDataQueues.h"
-#include "inet/transportlayer/tcp_common/TCPSegment.h"
-#include "inet/common/serializer/tcp/TCPSerializer.h"
-#include "inet/common/lifecycle/LifecycleOperation.h"
-#include "inet/common/ModuleAccess.h"
-#include "inet/common/lifecycle/NodeStatus.h"
 
 namespace inet {
 
@@ -424,14 +416,7 @@ void TCP_lwIP::handleMessage(cMessage *msgP)
         }
     }
     else if (msgP->arrivedOn("ipIn")) {
-        if (false
-#ifdef WITH_IPv4
-            || dynamic_cast<ICMPMessage *>(msgP)
-#endif // ifdef WITH_IPv4
-#ifdef WITH_IPv6
-            || dynamic_cast<ICMPv6Message *>(msgP)
-#endif // ifdef WITH_IPv6
-            )
+        if (dynamic_cast<L3Error *>(msgP))
         {
             EV_WARN << "ICMP error received -- discarding\n";    // FIXME can ICMP packets really make it up to TCP???
             delete msgP;

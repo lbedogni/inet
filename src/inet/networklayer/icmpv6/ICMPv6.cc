@@ -22,7 +22,7 @@
 #include "inet/common/IProtocolRegistrationListener.h"
 #include "inet/common/ModuleAccess.h"
 #include "inet/common/lifecycle/NodeStatus.h"
-#include "inet/networklayer/contract/IcmpErrorControlInfo.h"
+#include "inet/networklayer/contract/L3Error.h"
 #include "inet/networklayer/contract/IInterfaceTable.h"
 #include "inet/networklayer/contract/ipv6/IPv6ControlInfo.h"
 #include "inet/networklayer/icmpv6/ICMPv6.h"
@@ -37,21 +37,21 @@ Define_Module(ICMPv6);
 namespace {
 
 //TODO add other constants, verify
-IcmpErrorControlInfoErrorCodes icmpv6ToErrorCode(ICMPv6Type type, int code)
+L3ErrorControlInfoErrorCodes icmpv6ToErrorCode(ICMPv6Type type, int code)
 {
     switch (type) {
         case ICMPv6_DESTINATION_UNREACHABLE:
             switch (code) {
-                case NO_ROUTE_TO_DEST: return ICMPERROR_DEST_UNREACHABLE;
-                case ADDRESS_UNREACHABLE: return ICMPERROR_HOST_UNREACHABLE;
-                case COMM_WITH_DEST_PROHIBITED: return ICMPERROR_PROTOCOL_UNREACHABLE;
-                case PORT_UNREACHABLE: return ICMPERROR_PORT_UNREACHABLE;
+                case NO_ROUTE_TO_DEST: return L3ERROR_DEST_UNREACHABLE;
+                case ADDRESS_UNREACHABLE: return L3ERROR_HOST_UNREACHABLE;
+                case COMM_WITH_DEST_PROHIBITED: return L3ERROR_PROTOCOL_UNREACHABLE;
+                case PORT_UNREACHABLE: return L3ERROR_PORT_UNREACHABLE;
                 default: break;
             }
             throw cRuntimeError("Unknown ICMPv6 destination unreachable code: %d", code);
-        case ICMPv6_PACKET_TOO_BIG: return ICMPERROR_FRAGMENTATION_NEEDED;
-        case ICMPv6_PARAMETER_PROBLEM: return ICMPERROR_PARAMETER_PROBLEM;
-        case ICMPv6_TIME_EXCEEDED: return ICMPERROR_TIME_EXCEEDED;
+        case ICMPv6_PACKET_TOO_BIG: return L3ERROR_FRAGMENTATION_NEEDED;
+        case ICMPv6_PARAMETER_PROBLEM: return L3ERROR_PARAMETER_PROBLEM;
+        case ICMPv6_TIME_EXCEEDED: return L3ERROR_TIME_EXCEEDED;
         default: break;
     }
     throw cRuntimeError("Unknown ICMPv6 type: %d, code: %d", type, code);
@@ -61,14 +61,14 @@ IcmpErrorControlInfoErrorCodes icmpv6ToErrorCode(ICMPv6Type type, int code)
 void convertErrorCodeToIcmpv6TypeAndCode(int errorCode, ICMPv6Type& type, int& code)
 {
     switch (errorCode) {
-        case ICMPERROR_DEST_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = NO_ROUTE_TO_DEST; break;
-        case ICMPERROR_HOST_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = ADDRESS_UNREACHABLE; break;
-        case ICMPERROR_PROTOCOL_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = COMM_WITH_DEST_PROHIBITED; break;
-        case ICMPERROR_PORT_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = PORT_UNREACHABLE; break;
-        case ICMPERROR_FRAGMENTATION_NEEDED: type = ICMPv6_PACKET_TOO_BIG; code = 0; break;
-        case ICMPERROR_PARAMETER_PROBLEM: type = ICMPv6_PARAMETER_PROBLEM; code = 0; break;
-        case ICMPERROR_TIME_EXCEEDED: type = ICMPv6_TIME_EXCEEDED; code = 0; break;
-        default: throw cRuntimeError("Unknown IcmpErrorControlInfoErrorCodes value: %d", errorCode); break;
+        case L3ERROR_DEST_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = NO_ROUTE_TO_DEST; break;
+        case L3ERROR_HOST_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = ADDRESS_UNREACHABLE; break;
+        case L3ERROR_PROTOCOL_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = COMM_WITH_DEST_PROHIBITED; break;
+        case L3ERROR_PORT_UNREACHABLE: type = ICMPv6_DESTINATION_UNREACHABLE; code = PORT_UNREACHABLE; break;
+        case L3ERROR_FRAGMENTATION_NEEDED: type = ICMPv6_PACKET_TOO_BIG; code = 0; break;
+        case L3ERROR_PARAMETER_PROBLEM: type = ICMPv6_PARAMETER_PROBLEM; code = 0; break;
+        case L3ERROR_TIME_EXCEEDED: type = ICMPv6_TIME_EXCEEDED; code = 0; break;
+        default: throw cRuntimeError("Unknown L3ErrorControlInfoErrorCodes value: %d", errorCode); break;
     }
 }
 
@@ -113,7 +113,7 @@ void ICMPv6::handleMessage(cMessage *msg)
 
 void ICMPv6::processUpperMessage(cMessage *msg)
 {
-    IcmpErrorControlInfo *icmpCtrl = check_and_cast<IcmpErrorControlInfo *>(msg->removeControlInfo());
+    L3ErrorControlInfo *icmpCtrl = check_and_cast<L3ErrorControlInfo *>(msg->removeControlInfo());
     IPv6ControlInfo *ctrl = check_and_cast<IPv6ControlInfo *>(icmpCtrl->getNetworkProtocolControlInfo());
     icmpCtrl->setNetworkProtocolControlInfo(nullptr);
     ICMPv6Type type;
@@ -139,14 +139,16 @@ void ICMPv6::processICMPv6ErrorMessage(ICMPv6Message *icmpv6msg)
             delete bogusTransportPacket;
         }
         else {
-            IcmpErrorControlInfo *ctrl = new IcmpErrorControlInfo();
+            L3ErrorControlInfo *ctrl = new L3ErrorControlInfo();
             ctrl->setTransportProtocol(bogusL3Packet->getTransportProtocol());
             ctrl->setSourceAddress(bogusL3Packet->getSourceAddress());
             ctrl->setDestinationAddress(bogusL3Packet->getDestinationAddress());
             ctrl->setErrorCode(icmpv6ToErrorCode((ICMPv6Type)icmpv6msg->getType(), icmpv6msg->getCode()));
-            bogusTransportPacket->setControlInfo(ctrl);
-            bogusTransportPacket->setName(icmpv6msg->getName());
-            send(bogusTransportPacket, "transportOut");
+            L3Error *errmsg = new L3Error();
+            errmsg->encapsulate(bogusTransportPacket);
+            errmsg->setControlInfo(ctrl);
+            errmsg->setName(icmpv6msg->getName());
+            send(errmsg, "transportOut");
         }
     }
     delete icmpv6msg;

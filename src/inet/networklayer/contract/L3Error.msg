@@ -36,17 +36,17 @@ namespace inet;
 class noncobject L3Address;
 class noncobject INetworkProtocolControlInfoPtr;
 
-enum IcmpErrorControlInfoErrorCodes {
-    ICMPERROR_DEST_UNREACHABLE = 1000;
-    ICMPERROR_HOST_UNREACHABLE = 1001;
-    ICMPERROR_PROTOCOL_UNREACHABLE = 1002;
-    ICMPERROR_PORT_UNREACHABLE = 1003;
-    ICMPERROR_TIME_EXCEEDED = 1004;
-    ICMPERROR_FRAGMENTATION_NEEDED = 1005;
-    ICMPERROR_PARAMETER_PROBLEM = 1006;
+enum L3ErrorControlInfoErrorCodes {
+    L3ERROR_DEST_UNREACHABLE = 1000;
+    L3ERROR_HOST_UNREACHABLE = 1001;
+    L3ERROR_PROTOCOL_UNREACHABLE = 1002;
+    L3ERROR_PORT_UNREACHABLE = 1003;
+    L3ERROR_TIME_EXCEEDED = 1004;
+    L3ERROR_FRAGMENTATION_NEEDED = 1005;
+    L3ERROR_PARAMETER_PROBLEM = 1006;
 };
 
-class IcmpErrorControlInfo
+class L3ErrorControlInfo
 {
     @customize(true);
     @implements(INetworkProtocolControlInfo, IProtocolControlInfo, ISocketControlInfo);
@@ -57,7 +57,11 @@ class IcmpErrorControlInfo
     short hopLimit = -1;
     L3Address sourceAddress @getter(_getSourceAddress);
     L3Address destinationAddress @getter(_getDestinationAddress);
-    int errorCode @enum(IcmpErrorControlInfoErrorCodes) = -1;
-    INetworkProtocolControlInfoPtr networkProtocolControlInfo;  // owned by IcmpErrorControlInfo
+    int errorCode @enum(L3ErrorControlInfoErrorCodes) = -1;
+    INetworkProtocolControlInfoPtr networkProtocolControlInfo;  // owned by L3ErrorControlInfo
+}
+
+packet L3Error
+{
 }
 

@@ -21,7 +21,7 @@
 #include "inet/common/IProtocolRegistrationListener.h"
 #include "inet/transportlayer/udp/UDP.h"
 #include "inet/transportlayer/udp/UDPPacket.h"
-#include "inet/networklayer/contract/IcmpErrorControlInfo.h"
+#include "inet/networklayer/contract/L3Error.h"
 #include "inet/networklayer/contract/IInterfaceTable.h"
 #include "inet/networklayer/contract/ipv4/IPv4ControlInfo.h"
 #include "inet/networklayer/contract/ipv6/IPv6ControlInfo.h"
@@ -151,16 +151,19 @@ void UDP::handleMessage(cMessage *msg)
 
     // received from IP layer
     if (msg->arrivedOn("ipIn")) {
-        UDPPacket *pk = check_and_cast<UDPPacket *>(msg);
-        cObject *ctrl = pk->removeControlInfo();
-        if (!ctrl)
-            throw cRuntimeError("Control info is missing");
-        if (IcmpErrorControlInfo *errCtrl = dynamic_cast<IcmpErrorControlInfo *>(ctrl))
-            processICMPError(pk, errCtrl); // assume it's an ICMP error
-        else if (INetworkProtocolControlInfo *nwCtrl = dynamic_cast<INetworkProtocolControlInfo *>(ctrl))
-            processUDPPacket(pk, nwCtrl);
+        if (UDPPacket *pk = dynamic_cast<UDPPacket *>(msg)) {
+            cObject *ctrl = pk->removeControlInfo();
+            if (!ctrl)
+                throw cRuntimeError("Control info is missing");
+            else if (INetworkProtocolControlInfo *nwCtrl = dynamic_cast<INetworkProtocolControlInfo *>(ctrl))
+                processUDPPacket(pk, nwCtrl);
+            else
+                throw cRuntimeError("Unaccepted control info type: '%s'", ctrl->getClassName());
+        }
+        else if (L3Error *errMsg = dynamic_cast<L3Error *>(msg))
+            processICMPError(errMsg); // assume it's an ICMP error
         else
-            throw cRuntimeError("Unaccepted control info type: '%s'", ctrl->getClassName());
+            throw cRuntimeError("unknown message type: %s", msg->getClassName());
     }
     else if (msg->arrivedOn("appIn")) {    // received from application layer
         if (msg->getKind() == UDP_C_DATA)
@@ -399,9 +402,11 @@ void UDP::processUDPPacket(UDPPacket *udpPacket, INetworkProtocolControlInfo *ct
     }
 }
 
-void UDP::processICMPError(UDPPacket *packet, IcmpErrorControlInfo *ctrl)
+void UDP::processICMPError(L3Error *msg)
 {
     // extract details from the error message, then try to notify socket that sent bogus packet
+    L3ErrorControlInfo *ctrl = check_and_cast<L3ErrorControlInfo *>(msg->getControlInfo());
+    UDPPacket *packet = check_and_cast<UDPPacket *>(msg->getEncapsulatedPacket());
     L3Address srcAddr = ctrl->getSourceAddress();
     ushort srcPort = packet->getSourcePort();
     L3Address destAddr = ctrl->getDestinationAddress();
@@ -421,8 +426,7 @@ void UDP::processICMPError(UDPPacket *packet, IcmpErrorControlInfo *ctrl)
     // send UDP_I_ERROR to socket
     EV_DETAIL << "Source socket is sockId=" << sd->sockId << ", notifying.\n";
     sendUpErrorIndication(sd, srcAddr, srcPort, destAddr, destPort);
-    delete packet;
-    delete ctrl;
+    delete msg;
 }
 
 void UDP::processUndeliverablePacket(UDPPacket *udpPacket, INetworkProtocolControlInfo *ctrl)
@@ -431,19 +435,21 @@ void UDP::processUndeliverablePacket(UDPPacket *udpPacket, INetworkProtocolContr
     numDroppedWrongPort++;
 
     // send back ICMP PORT_UNREACHABLE
-    IcmpErrorControlInfo *icmpCtrl = new IcmpErrorControlInfo();
+    L3Error *errMsg = new L3Error();
+    L3ErrorControlInfo *icmpCtrl = new L3ErrorControlInfo();
     icmpCtrl->setTransportProtocol(ctrl->getTransportProtocol());
     icmpCtrl->setInterfaceId(ctrl->getInterfaceId());
-    icmpCtrl->setErrorCode(ICMPERROR_PORT_UNREACHABLE);
+    icmpCtrl->setErrorCode(L3ERROR_PORT_UNREACHABLE);
     icmpCtrl->setSourceAddress(ctrl->getSourceAddress());
     icmpCtrl->setDestinationAddress(ctrl->getDestinationAddress());
     icmpCtrl->setNetworkProtocolControlInfo(ctrl);
 
-    udpPacket->setControlInfo(icmpCtrl);
+    errMsg->setControlInfo(icmpCtrl);
+    errMsg->encapsulate(udpPacket);
     char buff[80];
     snprintf(buff, sizeof(buff), "Port %d unreachable", udpPacket->getDestinationPort());
-    udpPacket->setName(buff);
-    send(udpPacket, "ipOut");
+    errMsg->setName(buff);
+    send(errMsg, "ipOut");
 }
 
 void UDP::bind(int sockId, int gateIndex, const L3Address& localAddr, int localPort)
