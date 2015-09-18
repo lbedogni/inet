@@ -840,7 +840,11 @@ void IPv4::arpResolutionTimedOut(IARP::Notification *entry)
     auto it = pendingPackets.find(entry->l3Address.toIPv4());
     if (it != pendingPackets.end()) {
         cPacketQueue& packetQueue = it->second;
-        EV << "ARP resolution failed for " << entry->l3Address << ",  dropping " << packetQueue.getLength() << " packets\n";
+        EV << "ARP resolution failed for " << entry->l3Address << ",  sending " << packetQueue.getLength() << " ICMP errors (Destination host " << entry->l3Address << " unreachable)\n";
+        while (!packetQueue.isEmpty()) {
+            IPv4Datagram *dgram = check_and_cast<IPv4Datagram *>(packetQueue.pop());
+            sendToIcmp(TO_LOCAL, dgram, -1, ICMP_DESTINATION_UNREACHABLE, ICMP_DU_HOST_UNREACHABLE);
+        }
         packetQueue.clear();
         pendingPackets.erase(it);
     }
