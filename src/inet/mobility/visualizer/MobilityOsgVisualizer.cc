@@ -46,7 +46,7 @@ void MobilityOsgVisualizer::initialize(int stage)
 osg::PositionAttitudeTransform* MobilityOsgVisualizer::createOsgNode(const IMobility *mobility)
 {
     auto module = const_cast<cModule *>(check_and_cast<const cModule *>(mobility));
-    auto networkNode = getContainingNode(module);
+    auto networkNode = getModuleFromPar<cModule>(module->par("visualizerTargetModule"), module);
     osg::Node *osgNode = nullptr;
     if (networkNode->hasPar("visualization") && strlen(networkNode->par("visualization")) != 0) {
         const char *visualization = networkNode->par("visualization");
@@ -55,9 +55,8 @@ osg::PositionAttitudeTransform* MobilityOsgVisualizer::createOsgNode(const IMobi
             throw cRuntimeError("Model file \"%s\" not found", visualization);
     }
     else {
-        std::string path;
         // TODO: get real images path
-        path += "/home/levy/workspace/omnetpp/images/";
+        std::string path("/home/levy/workspace/omnetpp/images/");
         path += networkNode->getDisplayString().getTagArg("i", 0);
         path += ".png";
         auto image = osgDB::readImageFile(path.c_str());

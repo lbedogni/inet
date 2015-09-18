@@ -66,31 +66,36 @@ void MobilityBase::initialize(int stage)
 
     EV_TRACE << "initializing MobilityBase stage " << stage << endl;
     if (stage == INITSTAGE_LOCAL) {
+        bool visualizeMobility = par("visualizeMobility");
         constraintAreaMin.x = par("constraintAreaMinX");
         constraintAreaMin.y = par("constraintAreaMinY");
         constraintAreaMin.z = par("constraintAreaMinZ");
         constraintAreaMax.x = par("constraintAreaMaxX");
         constraintAreaMax.y = par("constraintAreaMaxY");
         constraintAreaMax.z = par("constraintAreaMaxZ");
-        visualRepresentation = findVisualRepresentation();
-        if (visualRepresentation) {
-            const char *s = visualRepresentation->getDisplayString().getTagArg("p", 2);
-            if (s && *s)
-                throw cRuntimeError("The coordinates of '%s' are invalid. Please remove automatic arrangement"
-                                    " (3rd argument of 'p' tag) from '@display' attribute.", visualRepresentation->getFullPath().c_str());
+        if (visualizeMobility) {
+            visualRepresentation = findVisualRepresentation();
+            positionAttitudeTransform = MobilityOsgVisualizer::createOsgNode(this);
+            if (visualRepresentation != nullptr) {
+                const char *s = visualRepresentation->getDisplayString().getTagArg("p", 2);
+                if (s && *s)
+                    throw cRuntimeError("The coordinates of '%s' are invalid. Please remove automatic arrangement"
+                                        " (3rd argument of 'p' tag) from '@display' attribute.", visualRepresentation->getFullPath().c_str());
+            }
         }
         WATCH(constraintAreaMin);
         WATCH(constraintAreaMax);
         WATCH(lastPosition);
-        positionAttitudeTransform = MobilityOsgVisualizer::createOsgNode(this);
     }
     else if (stage == INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
-        auto visualizationTarget = visualRepresentation->getParentModule();
-        canvasProjection = CanvasProjection::getCanvasProjection(visualizationTarget->getCanvas());
+        if (visualRepresentation != nullptr) {
+            auto visualizationTarget = visualRepresentation->getParentModule();
+            canvasProjection = CanvasProjection::getCanvasProjection(visualizationTarget->getCanvas());
+            auto scene = inet::osg::getScene(visualizationTarget);
+            scene->addChild(positionAttitudeTransform);
+        }
         initializeOrientation();
         initializePosition();
-        auto scene = inet::osg::getScene(visualizationTarget);
-        scene->addChild(positionAttitudeTransform);
     }
 }
 
@@ -154,7 +159,7 @@ void MobilityBase::handleMessage(cMessage *message)
 void MobilityBase::updateVisualRepresentation()
 {
     EV_DEBUG << "current position = " << lastPosition << endl;
-    if (hasGUI() && visualRepresentation) {
+    if (hasGUI() && visualRepresentation != nullptr) {
         MobilityCanvasVisualizer::setPosition(lastPosition, visualRepresentation, canvasProjection);
         MobilityOsgVisualizer::setPosition(lastPosition, positionAttitudeTransform);
     }

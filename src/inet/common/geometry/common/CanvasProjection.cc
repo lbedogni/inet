@@ -19,6 +19,7 @@
 
 namespace inet {
 
+CanvasProjection CanvasProjection::defaultCanvasProjection;
 std::map<const cCanvas *, const CanvasProjection *> CanvasProjection::canvasProjections;
 
 CanvasProjection::CanvasProjection(Rotation rotation, cFigure::Point translation) :
@@ -37,7 +38,7 @@ const CanvasProjection *CanvasProjection::getCanvasProjection(const cCanvas *can
 {
     auto it = canvasProjections.find(canvas);
     if (it == canvasProjections.end())
-        return nullptr;
+        return &defaultCanvasProjection;
     else
         return it->second;
 }

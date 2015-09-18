@@ -62,8 +62,9 @@ void MobilityCanvasVisualizer::setPosition(const Coord& position, cModule* visua
 void MobilityCanvasVisualizer::receiveSignal(cComponent *source, simsignal_t signal, cObject *object)
 {
     if (hasGUI() && signal == IMobility::mobilityStateChangedSignal) {
-        IMobility *mobility = dynamic_cast<IMobility *>(object);
-        setPosition(mobility->getCurrentPosition(), getContainingNode(dynamic_cast<cModule*>(mobility)), canvasProjection);
+        auto mobility = dynamic_cast<IMobility *>(object);
+        auto module = dynamic_cast<cModule*>(mobility);
+        setPosition(mobility->getCurrentPosition(), getModuleFromPar<cModule>(module->par("visualizerTargetModule"), module), canvasProjection);
         if (leaveMovementTrail) {
             const Coord position = mobility->getCurrentPosition();
             const Coord speed = mobility->getCurrentSpeed();

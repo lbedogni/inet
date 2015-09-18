@@ -28,6 +28,7 @@ class INET_API CanvasProjection
     Rotation rotation;
     cFigure::Point translation;
 
+    static CanvasProjection defaultCanvasProjection;
     static std::map<const cCanvas *, const CanvasProjection *> canvasProjections;
 
   public:
