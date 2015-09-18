@@ -26,6 +26,9 @@ Group *getScene(cModule *module)
     auto osgCanvas = module->getOsgCanvas();
     if (osgCanvas->getScene() == nullptr) {
         auto scene = new osg::Group();
+        // TODO: parameters?
+        osgCanvas->setZNear(0.1);
+        osgCanvas->setZFar(100000);
         osgCanvas->setCameraManipulatorType(cOsgCanvas::CAM_TRACKBALL);
         osgCanvas->setScene(scene);
     }

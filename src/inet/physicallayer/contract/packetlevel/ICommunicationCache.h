@@ -25,7 +25,6 @@
 #include "inet/physicallayer/contract/packetlevel/IRadioFrame.h"
 #include "inet/physicallayer/contract/packetlevel/IReceptionDecision.h"
 #include "inet/physicallayer/contract/packetlevel/IRadioFrame.h"
-#include "osg/Node"
 
 namespace inet {
 
@@ -62,14 +61,6 @@ class INET_API ICommunicationCache : public IPrintableObject
     virtual const IRadioFrame *getCachedFrame(const ITransmission *transmission) = 0;
     virtual void setCachedFrame(const ITransmission *transmission, const IRadioFrame *radioFrame) = 0;
     virtual void removeCachedFrame(const ITransmission *transmission) = 0;
-
-    virtual cFigure *getCachedFigure(const ITransmission *transmission) = 0;
-    virtual void setCachedFigure(const ITransmission *transmission, cFigure *figure) = 0;
-    virtual void removeCachedFigure(const ITransmission *transmission) = 0;
-
-    virtual osg::Node *getCachedOsgNode(const ITransmission *transmission) = 0;
-    virtual void setCachedOsgNode(const ITransmission *transmission, osg::Node *node) = 0;
-    virtual void removeCachedOsgNode(const ITransmission *transmission) = 0;
     //@}
 
     /** @name Reception Cache */

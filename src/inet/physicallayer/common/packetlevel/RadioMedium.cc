@@ -412,6 +412,7 @@ void RadioMedium::addRadio(const IRadio *radio)
         radioModule->subscribe(IRadio::listeningChangedSignal, this);
     if (macAddressFilter)
         getContainingNode(radioModule)->subscribe(NF_INTERFACE_CONFIG_CHANGED, this);
+    fireRadioAdded(radio);
 }
 
 void RadioMedium::removeRadio(const IRadio *radio)
@@ -434,6 +435,7 @@ void RadioMedium::removeRadio(const IRadio *radio)
         radioModule->unsubscribe(IRadio::listeningChangedSignal, this);
     if (macAddressFilter)
         getContainingNode(radioModule)->unsubscribe(NF_INTERFACE_CONFIG_CHANGED, this);
+    fireRadioRemoved(radio);
 }
 
 void RadioMedium::addTransmission(const IRadio *transmitterRadio, const ITransmission *transmission)
@@ -632,6 +634,18 @@ void RadioMedium::fireMediumChanged() const
 {
     for (auto listener : listeners)
         listener->mediumChanged();
+}
+
+void RadioMedium::fireRadioAdded(const IRadio *radio) const
+{
+    for (auto listener : listeners)
+        listener->radioAdded(radio);
+}
+
+void RadioMedium::fireRadioRemoved(const IRadio *radio) const
+{
+    for (auto listener : listeners)
+        listener->radioRemoved(radio);
 }
 
 void RadioMedium::fireTransmissionAdded(const ITransmission *transmission) const

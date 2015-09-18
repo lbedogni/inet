@@ -21,7 +21,7 @@ package inet.common.visualizer;
 module StandardVisualizer like IVisualizer
 {
     parameters:
-        @display("i=block/app");
+        @display("bgb=0,0;i=block/app");
     submodules:
         canvasVisualizer: CanvasVisualizer {
             parameters:

@@ -26,6 +26,8 @@ simple MediumOsgVisualizer extends VisualizerBase like IMediumVisualizer
         @class(MediumOsgVisualizer);
         string mediumModule = default("^");
         bool displayCommunication = default(false);         // when enabled the radio medium displays the ongoing transmissions
+        bool displayCommunicationRange = default(true);     // if true communication range is displayed as a blue circle around radios
+        bool displayInterferenceRange = default(true);      // if true interference range is displayed as a gray circle around radios
         bool leaveCommunicationTrail = default(false);      // when enabled the radio medium displays recent successful receptions as straight blue lines from the transmission to the reception
-        double updateSceneInterval @unit(s) = default(0s); // the time interval between scene updates when there are ongoing transmissions
+        double updateSceneInterval @unit(s) = default(0s);  // the time interval between scene updates when there are ongoing transmissions
 }

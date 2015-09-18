@@ -58,6 +58,8 @@ void MediumCanvasVisualizer::initialize(int stage)
         radioMedium = getModuleFromPar<RadioMedium>(par("mediumModule"), this);
         radioMedium->addListener(this);
         displayCommunication = par("displayCommunication");
+        displayInterferenceRange = par("displayInterferenceRange");
+        displayCommunicationRange = par("displayCommunicationRange");
         drawCommunication2D = par("drawCommunication2D");
         cCanvas *canvas = visualizerTargetModule->getCanvas();
         if (displayCommunication) {
@@ -115,17 +117,47 @@ void MediumCanvasVisualizer::handleMessage(cMessage *message)
         throw cRuntimeError("Unknown message");
 }
 
+cFigure *MediumCanvasVisualizer::getCachedFigure(const ITransmission *transmission) const
+{
+    auto it = transmissionFigures.find(transmission);
+    if (it == transmissionFigures.end())
+        return nullptr;
+    else
+        return it->second;
+}
+
+void MediumCanvasVisualizer::setCachedFigure(const ITransmission *transmission, cFigure *figure)
+{
+    transmissionFigures[transmission] = figure;
+}
+
+void MediumCanvasVisualizer::removeCachedFigure(const ITransmission *transmission)
+{
+    transmissionFigures.erase(transmission);
+}
+
 void MediumCanvasVisualizer::mediumChanged()
 {
     if (displayCommunication)
         updateCanvas();
 }
 
+void MediumCanvasVisualizer::radioAdded(const IRadio *radio)
+{
+    if (displayInterferenceRange)
+        setInterferenceRange(radio);
+    if (displayCommunicationRange)
+        setCommunicationRange(radio);
+}
+
+void MediumCanvasVisualizer::radioRemoved(const IRadio *radio)
+{
+}
+
 void MediumCanvasVisualizer::transmissionAdded(const ITransmission *transmission)
 {
     if (displayCommunication) {
         transmissions.push_back(transmission);
-        ICommunicationCache *communicationCache = const_cast<ICommunicationCache *>(radioMedium->getCommunicationCache());
         cFigure::Point position = canvasProjection->computeCanvasPoint(transmission->getStartPosition());
         cGroupFigure *groupFigure = new cGroupFigure();
 #if OMNETPP_CANVAS_VERSION >= 0x20140908
@@ -157,7 +189,7 @@ void MediumCanvasVisualizer::transmissionAdded(const ITransmission *transmission
         nameFigure->setColor(color);
         groupFigure->addFigure(nameFigure);
         communicationLayer->addFigure(groupFigure);
-        communicationCache->setCachedFigure(transmission, groupFigure);
+        setCachedFigure(transmission, groupFigure);
         updateCanvas();
         if (updateCanvasInterval > 0 && !updateCanvasTimer->isScheduled())
             scheduleUpdateCanvasTimer();
@@ -168,8 +200,8 @@ void MediumCanvasVisualizer::transmissionRemoved(const ITransmission *transmissi
 {
     if (displayCommunication) {
         transmissions.erase(std::remove(transmissions.begin(), transmissions.end(), transmission));
-        ICommunicationCache *communicationCache = const_cast<ICommunicationCache *>(radioMedium->getCommunicationCache());
-        cFigure *figure = communicationCache->getCachedFigure(transmission);
+        cFigure *figure = getCachedFigure(transmission);
+        removeCachedFigure(transmission);
         if (figure != nullptr)
             delete communicationLayer->removeFigure(figure);
     }
@@ -216,13 +248,12 @@ void MediumCanvasVisualizer::packetReceived(const IReceptionDecision *decision)
 void MediumCanvasVisualizer::updateCanvas() const
 {
     const IPropagation *propagation = radioMedium->getPropagation();
-    ICommunicationCache *communicationCache = const_cast<ICommunicationCache *>(radioMedium->getCommunicationCache());
 #if OMNETPP_CANVAS_VERSION >= 0x20140908
     if (communicationHeat != nullptr)
         communicationHeat->coolDown();
 #endif
     for (const auto transmission : transmissions) {
-        cFigure *groupFigure = communicationCache->getCachedFigure(transmission);
+        cFigure *groupFigure = getCachedFigure(transmission);
         double startRadius = propagation->getPropagationSpeed().get() * (simTime() - transmission->getStartTime()).dbl();
         double endRadius = propagation->getPropagationSpeed().get() * (simTime() - transmission->getEndTime()).dbl();
         if (groupFigure) {
@@ -295,6 +326,32 @@ void MediumCanvasVisualizer::scheduleUpdateCanvasTimer()
     }
     if (nextEndTime > now)
         scheduleAt(nextEndTime, updateCanvasTimer);
+}
+
+void MediumCanvasVisualizer::setInterferenceRange(const IRadio *radio)
+{
+    auto module = check_and_cast<const cModule *>(radio);
+    auto node = findContainingNode(const_cast<cModule *>(module));
+    cDisplayString& displayString = node->getDisplayString();
+    m maxInterferenceRage = check_and_cast<const RadioMedium *>(radio->getMedium())->getMediumLimitCache()->getMaxInterferenceRange(radio);
+    const char *tag = "r1";
+    displayString.removeTag(tag);
+    displayString.insertTag(tag);
+    displayString.setTagArg(tag, 0, maxInterferenceRage.get());
+    displayString.setTagArg(tag, 2, "gray");
+}
+
+void MediumCanvasVisualizer::setCommunicationRange(const IRadio *radio)
+{
+    auto module = check_and_cast<const cModule *>(radio);
+    auto node = findContainingNode(const_cast<cModule *>(module));
+    cDisplayString& displayString = node->getDisplayString();
+    m maxCommunicationRange = check_and_cast<const RadioMedium *>(radio->getMedium())->getMediumLimitCache()->getMaxCommunicationRange(radio);
+    const char *tag = "r2";
+    displayString.removeTag(tag);
+    displayString.insertTag(tag);
+    displayString.setTagArg(tag, 0, maxCommunicationRange.get());
+    displayString.setTagArg(tag, 2, "blue");
 }
 
 } // namespace physicallayer

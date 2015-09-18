@@ -15,11 +15,11 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "inet/physicallayer/common/packetlevel/Radio.h"
-#include "inet/physicallayer/common/packetlevel/RadioMedium.h"
 #include "inet/common/lifecycle/NodeOperations.h"
 #include "inet/common/ModuleAccess.h"
-#include "inet/common/OSGUtils.h"
+#include "inet/physicallayer/common/packetlevel/Radio.h"
+#include "inet/physicallayer/common/packetlevel/RadioMedium.h"
+#include "inet/physicallayer/visualizer/MediumCanvasVisualizer.h"
 
 namespace inet {
 
@@ -88,11 +88,12 @@ void Radio::initialize(int stage)
         medium->addRadio(this);
         endSwitchTimer = new cMessage("endSwitch");
         parseRadioModeSwitchingTimes();
-        if (displayCommunicationRange || displayInterferenceRange)
-            check_and_cast<cModule *>(antenna->getMobility())->subscribe(IMobility::mobilityStateChangedSignal, this);
     }
     else if (stage == INITSTAGE_LAST) {
-        updateDisplayString();
+        if (displayInterferenceRange)
+            MediumCanvasVisualizer::setInterferenceRange(this);
+        if (displayCommunicationRange)
+            MediumCanvasVisualizer::setCommunicationRange(this);
         EV_INFO << "Initialized " << getCompleteStringRepresentation() << endl;
     }
 }
@@ -391,65 +392,6 @@ void Radio::updateTransceiverState()
         transmissionState = newRadioTransmissionState;
         emit(transmissionStateChangedSignal, newRadioTransmissionState);
     }
-}
-
-void Radio::updateDisplayString()
-{
-    // draw the interference area and sensitivity area
-    // according pathloss propagation only
-    // we use the radio channel method to calculate interference distance
-    // it should be the methods provided by propagation models, but to
-    // avoid a big modification, we reuse those methods.
-    if (hasGUI() && (displayInterferenceRange || displayCommunicationRange)) {
-        cModule *host = findContainingNode(this);
-        cDisplayString& displayString = host->getDisplayString();
-        if (displayInterferenceRange) {
-            m maxInterferenceRage = check_and_cast<const RadioMedium *>(medium)->getMediumLimitCache()->getMaxInterferenceRange(this);
-            char tag[32];
-            sprintf(tag, "r%i1", getId());
-            displayString.removeTag(tag);
-            displayString.insertTag(tag);
-            displayString.setTagArg(tag, 0, maxInterferenceRage.get());
-            displayString.setTagArg(tag, 2, "gray");
-
-            auto position = antenna->getMobility()->getCurrentPosition();
-            auto circle = inet::osg::createCircleGeometry(Coord::ZERO, maxInterferenceRage.get(), 100);
-            auto stateSet = inet::osg::createStateSet(cFigure::GREY, 1);
-            circle->setStateSet(stateSet);
-            auto autoTransform = inet::osg::createAutoTransform(circle, osg::AutoTransform::ROTATE_TO_SCREEN);
-            // TODO: update with mobility
-            auto pat = inet::osg::createPositionAttitudeTransform(position, EulerAngles::ZERO);
-            pat->addChild(autoTransform);
-            auto scene = inet::osg::getScene(host->getParentModule());
-            scene->addChild(pat);
-        }
-        if (displayCommunicationRange) {
-            m maxCommunicationRange = check_and_cast<const RadioMedium *>(medium)->getMediumLimitCache()->getMaxCommunicationRange(this);
-            char tag[32];
-            sprintf(tag, "r%i2", getId());
-            displayString.removeTag(tag);
-            displayString.insertTag(tag);
-            displayString.setTagArg(tag, 0, maxCommunicationRange.get());
-            displayString.setTagArg(tag, 2, "blue");
-
-            auto position = antenna->getMobility()->getCurrentPosition();
-            auto circle = inet::osg::createCircleGeometry(Coord::ZERO, maxCommunicationRange.get(), 100);
-            auto stateSet = inet::osg::createStateSet(cFigure::BLUE, 1);
-            circle->setStateSet(stateSet);
-            auto autoTransform = inet::osg::createAutoTransform(circle, osg::AutoTransform::ROTATE_TO_SCREEN);
-            // TODO: update with mobility
-            auto pat = inet::osg::createPositionAttitudeTransform(position, EulerAngles::ZERO);
-            pat->addChild(autoTransform);
-            auto scene = inet::osg::getScene(host->getParentModule());
-            scene->addChild(pat);
-        }
-    }
-}
-
-void Radio::receiveSignal(cComponent *source, simsignal_t signal, cObject *object)
-{
-    if (signal == IMobility::mobilityStateChangedSignal)
-        updateDisplayString();
 }
 
 } // namespace physicallayer

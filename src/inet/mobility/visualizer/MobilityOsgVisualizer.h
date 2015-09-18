@@ -42,7 +42,6 @@ class INET_API MobilityOsgVisualizer : public VisualizerBase, public cListener
     static void setPosition(const Coord& position, osg::PositionAttitudeTransform *positionAttitudeTransform);
 
     virtual void receiveSignal(cComponent *source, simsignal_t signal, cObject *object) override;
-
 };
 
 } // namespace inet

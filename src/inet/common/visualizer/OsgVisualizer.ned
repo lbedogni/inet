@@ -25,7 +25,7 @@ import inet.physicallayer.visualizer.MediumOsgVisualizer;
 module OsgVisualizer like IVisualizer
 {
     parameters:
-        @display("i=block/app");
+        @display("bgb=0,0;i=block/app");
     submodules:
         physicalEnvironmentVisualizer: PhysicalEnvironmentOsgVisualizer {
             parameters:

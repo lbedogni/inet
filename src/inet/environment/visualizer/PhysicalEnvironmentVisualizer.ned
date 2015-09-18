@@ -20,7 +20,7 @@ package inet.environment.visualizer;
 module PhysicalEnvironmentVisualizer like IPhysicalEnvironmentVisualizer
 {
     parameters:
-        @display("i=block/app");
+        @display("bgb=0,0;i=block/app");
     submodules:
         canvasVisualizer: PhysicalEnvironmentCanvasVisualizer {
             parameters:

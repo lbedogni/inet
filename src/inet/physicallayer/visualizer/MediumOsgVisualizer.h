@@ -33,7 +33,7 @@ class RadioMedium;
 /**
  * This class provides the visualization of the communication on the radio medium.
  */
-class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::IMediumListener
+class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::IMediumListener, public cListener
 {
   protected:
     /** @name Parameters */
@@ -46,6 +46,14 @@ class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::
      * Determines whether the visualizer displays the ongoing communications or not.
      */
     bool displayCommunication = false;
+    /**
+     * Displays a circle around the host submodule representing the communication range.
+     */
+    bool displayCommunicationRange = false;
+    /**
+     * Displays a circle around the host submodule representing the interference range.
+     */
+    bool displayInterferenceRange = false;
     /**
      * Specifies whether successful communication between radios leave a trail or not.
      */
@@ -62,6 +70,14 @@ class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::
      * The list of ongoing transmissions.
      */
     std::vector<const ITransmission *> transmissions;
+    /**
+     * The list of ongoing radio osg nodes.
+     */
+    std::map<const IRadio *, osg::Node *> radioOsgNodes;
+    /**
+     * The list of ongoing transmission osg nodes.
+     */
+    std::map<const ITransmission *, osg::Node *> transmissionOsgNodes;
     //@}
 
     /** @name Timer */
@@ -77,6 +93,14 @@ class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *message) override;
 
+    virtual osg::Node *getCachedOsgNode(const IRadio *radio) const;
+    virtual void setCachedOsgNode(const IRadio *radio, osg::Node *node);
+    virtual osg::Node *removeCachedOsgNode(const IRadio *radio);
+
+    virtual osg::Node *getCachedOsgNode(const ITransmission *transmission) const;
+    virtual void setCachedOsgNode(const ITransmission *transmission, osg::Node *node);
+    virtual osg::Node *removeCachedOsgNode(const ITransmission *transmission);
+
     virtual void updateScene() const;
     virtual void scheduleUpdateSceneTimer();
 
@@ -85,10 +109,13 @@ class INET_API MediumOsgVisualizer : public VisualizerBase, public RadioMedium::
     virtual ~MediumOsgVisualizer();
 
     virtual void mediumChanged() override;
+    virtual void radioAdded(const IRadio *radio) override;
+    virtual void radioRemoved(const IRadio *radio) override;
     virtual void transmissionAdded(const ITransmission *transmission) override;
     virtual void transmissionRemoved(const ITransmission *transmission) override;
     virtual void packetReceived(const IReceptionDecision *decision) override;
 
+    virtual void receiveSignal(cComponent *source, simsignal_t signal, cObject *object) override;
 };
 
 } // namespace physicallayer

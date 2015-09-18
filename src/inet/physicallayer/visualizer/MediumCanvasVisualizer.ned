@@ -26,6 +26,8 @@ simple MediumCanvasVisualizer extends VisualizerBase like IMediumVisualizer
         @class(MediumCanvasVisualizer);
         string mediumModule = default("^");
         bool displayCommunication = default(false);         // when enabled the radio medium displays the ongoing transmissions
+        bool displayCommunicationRange = default(true);     // if true communication range is displayed as a blue circle around radios
+        bool displayInterferenceRange = default(true);      // if true interference range is displayed as a gray circle around radios
         bool drawCommunication2D = default(false);          // when enabled the raido medium displays the ongoing transmissions as 2 dimensional rings instead of 3 dimensional spheres
         bool leaveCommunicationTrail = default(false);      // when enabled the radio medium displays recent successful receptions as straight blue lines from the transmission to the reception
         bool leaveCommunicationHeat = default(false);       // when enabled the radio medium displays recent successful receptions as a heat map overlay

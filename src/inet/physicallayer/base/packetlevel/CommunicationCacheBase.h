@@ -95,14 +95,6 @@ class INET_API CommunicationCacheBase : public cModule, public ICommunicationCac
          */
         const IRadioFrame *frame;
         /**
-         * The figure representing this transmission.
-         */
-        cFigure *figure;
-        /**
-         * The OSG node representing this transmission.
-         */
-        osg::Node *node;
-        /**
          * The list of intermediate reception computation results.
          */
         void *receptionCacheEntries;
@@ -137,14 +129,6 @@ class INET_API CommunicationCacheBase : public cModule, public ICommunicationCac
     virtual const IRadioFrame *getCachedFrame(const ITransmission *transmission);
     virtual void setCachedFrame(const ITransmission *transmission, const IRadioFrame *frame);
     virtual void removeCachedFrame(const ITransmission *transmission);
-
-    virtual cFigure *getCachedFigure(const ITransmission *transmission);
-    virtual void setCachedFigure(const ITransmission *transmission, cFigure *figure);
-    virtual void removeCachedFigure(const ITransmission *transmission);
-
-    virtual osg::Node *getCachedOsgNode(const ITransmission *transmission) override;
-    virtual void setCachedOsgNode(const ITransmission *transmission, osg::Node *node) override;
-    virtual void removeCachedOsgNode(const ITransmission *transmission) override;
     //@}
 
     /** @name Reception cache */

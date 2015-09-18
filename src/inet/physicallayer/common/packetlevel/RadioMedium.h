@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include "inet/common/IntervalTree.h"
-#include "inet/common/figures/TrailFigure.h"
 #include "inet/environment/contract/IPhysicalEnvironment.h"
 #include "inet/environment/contract/IMaterialRegistry.h"
 #include "inet/physicallayer/contract/packetlevel/IRadioMedium.h"
@@ -44,6 +43,8 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
     class INET_API IMediumListener {
       public:
         virtual void mediumChanged() = 0;
+        virtual void radioAdded(const IRadio *radio) = 0;
+        virtual void radioRemoved(const IRadio *radio) = 0;
         virtual void transmissionAdded(const ITransmission *transmission) = 0;
         virtual void transmissionRemoved(const ITransmission *transmission) = 0;
         virtual void packetReceived(const IReceptionDecision *decision) = 0;
@@ -312,6 +313,8 @@ class INET_API RadioMedium : public cSimpleModule, public cListener, public IRad
     /** @name Notification */
     //@{
     virtual void fireMediumChanged() const;
+    virtual void fireRadioAdded(const IRadio *radio) const;
+    virtual void fireRadioRemoved(const IRadio *radio) const;
     virtual void fireTransmissionAdded(const ITransmission *transmission) const;
     virtual void fireTransmissionRemoved(const ITransmission *transmission) const;
     virtual void firePacketReceived(const IReceptionDecision *decision) const;

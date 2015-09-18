@@ -54,6 +54,14 @@ class INET_API MediumCanvasVisualizer : public VisualizerBase, public RadioMediu
      */
     bool displayCommunication;
     /**
+     * Displays a circle around the host submodule representing the communication range.
+     */
+    bool displayCommunicationRange = false;
+    /**
+     * Displays a circle around the host submodule representing the interference range.
+     */
+    bool displayInterferenceRange = false;
+    /**
      * Determines how the ongoing communications are visualized: 3D spheres or
      * 2D circles on the X-Y plane.
      */
@@ -86,6 +94,10 @@ class INET_API MediumCanvasVisualizer : public VisualizerBase, public RadioMediu
      * The list of ongoing transmissions.
      */
     std::vector<const ITransmission *> transmissions;
+    /**
+     * The list of ongoing transmission figures.
+     */
+    std::map<const ITransmission *, cFigure *> transmissionFigures;
     //@}
 
     /** @name Timer */
@@ -120,6 +132,10 @@ class INET_API MediumCanvasVisualizer : public VisualizerBase, public RadioMediu
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *message) override;
 
+    virtual cFigure *getCachedFigure(const ITransmission *transmission) const;
+    virtual void setCachedFigure(const ITransmission *transmission, cFigure *figure);
+    virtual void removeCachedFigure(const ITransmission *transmission);
+
     virtual void updateCanvas() const;
     virtual void scheduleUpdateCanvasTimer();
 
@@ -127,11 +143,15 @@ class INET_API MediumCanvasVisualizer : public VisualizerBase, public RadioMediu
     MediumCanvasVisualizer();
     virtual ~MediumCanvasVisualizer();
 
-    virtual void mediumChanged();
-    virtual void transmissionAdded(const ITransmission *transmission);
-    virtual void transmissionRemoved(const ITransmission *transmission);
-    virtual void packetReceived(const IReceptionDecision *decision);
+    virtual void mediumChanged() override;
+    virtual void radioAdded(const IRadio *radio) override;
+    virtual void radioRemoved(const IRadio *radio) override;
+    virtual void transmissionAdded(const ITransmission *transmission) override;
+    virtual void transmissionRemoved(const ITransmission *transmission) override;
+    virtual void packetReceived(const IReceptionDecision *decision) override;
 
+    static void setInterferenceRange(const IRadio *radio);
+    static void setCommunicationRange(const IRadio *radio);
 };
 
 } // namespace physicallayer

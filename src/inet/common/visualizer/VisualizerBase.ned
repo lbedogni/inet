@@ -20,6 +20,6 @@ package inet.common.visualizer;
 simple VisualizerBase
 {
     parameters:
-        @display("i=block/app");
+        @display("bgb=0,0;i=block/app");
         string visualizerTargetModule = default(""); // specifies the module path where the visualization should appear (root module by default)
 }

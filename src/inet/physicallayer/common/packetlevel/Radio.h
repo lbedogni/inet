@@ -58,7 +58,7 @@ namespace physicallayer {
  * state changed signal.
  */
 // TODO: support capturing a stronger transmission
-class INET_API Radio : public PhysicalLayerBase, public virtual IRadio, public cListener
+class INET_API Radio : public PhysicalLayerBase, public virtual IRadio
 {
   public:
     static simsignal_t minSNIRSignal;
@@ -188,7 +188,6 @@ class INET_API Radio : public PhysicalLayerBase, public virtual IRadio, public c
 
     virtual bool isListeningPossible();
     virtual void updateTransceiverState();
-    virtual void updateDisplayString();
 
   public:
     Radio();
@@ -213,8 +212,6 @@ class INET_API Radio : public PhysicalLayerBase, public virtual IRadio, public c
 
     virtual const ITransmission *getTransmissionInProgress() const override;
     virtual const ITransmission *getReceptionInProgress() const override;
-
-    virtual void receiveSignal(cComponent *source, simsignal_t signal, cObject *object);
 };
 
 } // namespace physicallayer

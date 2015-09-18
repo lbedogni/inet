@@ -22,7 +22,7 @@ import inet.physicallayer.contract.packetlevel.IMediumVisualizer;
 module MediumVisualizer like IMediumVisualizer
 {
     parameters:
-        @display("i=block/app");
+        @display("bgb=0,0;i=block/app");
         *.mediumModule = default("^.^");
     submodules:
         canvasVisualizer: MediumCanvasVisualizer {
